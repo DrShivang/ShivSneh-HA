@@ -3,7 +3,7 @@ blueprint:
   description: >-
     A customised version of Home Assistant Blueprint - A script that sends an actionable notification with a confirmation before running the specified action.
   domain: script
-  source_url: https://github.com/home-assistant/core/blob/master/homeassistant/components/script/blueprints/confirmable_notification.yaml
+  source_url: https://github.com/DrShivang/ShivSneh-HA/blob/ec0d959842d61fc17e7c9e9596f4708b418cb3f2/blueprints/Confirmable_Notifications.yaml
   input:
     notify_device:
       name: Notification Service
