@@ -6,8 +6,8 @@ blueprint:
   source_url: https://github.com/DrShivang/ShivSneh-HA/blob/ec0d959842d61fc17e7c9e9596f4708b418cb3f2/blueprints/Confirmable_Notifications.yaml
   input:
     notify_device:
-      name: Notification Service
-      description: Mention Notification service
+      name: Notification service
+      description: Notification service name (ex. Notify.mobile_app_....). Note that device/s needs to run the official Home Assistant app to receive notifications.
       selector:
         text:
     title:
@@ -45,7 +45,18 @@ blueprint:
       default: []
       selector:
         action:
-
+    tag:
+      name: "Notification Tag"
+      description: "notification tag for updating and dismissing the notification"
+      default: {}
+      selector:
+        text:
+    timeout:
+        name: "Timeout duration"
+        description: "Please enter a timeout duration for the notification to display else it fails"
+        default: {}
+        selector:
+          duration:
 mode: restart
 
 sequence:
@@ -54,17 +65,17 @@ sequence:
       action_confirm: "{{ 'CONFIRM_' ~ context.id }}"
       action_dismiss: "{{ 'DISMISS_' ~ context.id }}"
   - alias: "Send notification"
-    domain: mobile_app
-    type: notify
-    device_id: !input notify_device
-    title: !input title
-    message: !input message
+    service: !input notify_device
     data:
-      actions:
-        - action: "{{ action_confirm }}"
-          title: !input confirm_text
-        - action: "{{ action_dismiss }}"
-          title: !input dismiss_text
+      message: !input message 
+      title: !input title
+      data:
+        actions:
+          - action: "{{ action_confirm }}"
+            title:  !input confirm_text
+          - action: "{{ action_dismiss }}"
+            title:  !input dismiss_text
+        tag: !input tag
   - alias: "Awaiting response"
     wait_for_trigger:
       - platform: event
@@ -75,8 +86,43 @@ sequence:
         event_type: mobile_app_notification_action
         event_data:
           action: "{{ action_dismiss }}"
+      - platform: event
+        event_type: mobile_app_notification_cleared
+    timeout: !input timeout
   - choose:
+      - conditions: '{{ wait.trigger.event.event_type == "mobile_app_notification_cleared" }}' 
+        sequence: 
+          - service: !input notify_device
+            data:
+              message: clear_notification
+              data:
+                tag: !input tag
+          - choose:
+            default: !input dismiss_action
       - conditions: "{{ wait.trigger.event.data.action == action_confirm }}"
-        sequence: !input confirm_action
+        sequence: 
+          - service: !input notify_device
+            data:
+              message: clear_notification
+              data:
+                tag: !input tag
+          - choose:
+            default: !input confirm_action
       - conditions: "{{ wait.trigger.event.data.action == action_dismiss }}"
-        sequence: !input dismiss_action
+        sequence: 
+          - service: !input notify_device
+            data:
+              message: clear_notification
+              data:
+                tag: !input tag
+          - choose:
+            default: !input dismiss_action
+      - conditions: "{{ wait.remaining == 0}}"
+        sequence: 
+          - service: !input notify_device
+            data:
+              message: clear_notification
+              data:
+                tag: !input tag
+          - choose:
+            default: !input dismiss_action
