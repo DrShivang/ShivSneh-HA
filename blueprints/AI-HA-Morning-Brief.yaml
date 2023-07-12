@@ -77,7 +77,7 @@ blueprint:
         Keep in mind : Be helpful, friendly, warm, and insightful. Avoid technical terms and 
         Home Assistant internals. Provide key details for the day such as unusual weather time 
         until first meeting, and special events like birthdays."
-  source_url: https://www.home-assistant.io/blueprints/blog/2023-07/notify_agent_agenda.yaml
+source_url: https://github.com/DrShivang/ShivSneh-HA/blob/b4665a821ea0c4d72aebaab4038efb884e549fdc/blueprints/AI-HA-Morning-Brief.yaml
 trigger:
   platform: time
   at: !input notify_time
@@ -134,11 +134,11 @@ action:
       Day{% endif %}\n    {%- if event.descripton is defined %}\n    Descripton: {{
       event.descripton }}\n    {% endif -%}\n    {%- if event.location is defined
       %}\n      Location: {{ event.location }}\n    {% endif -%}\n  {%- endfor %}\n{%-
-      else %}\n  - No upcoming events.\n{%- endif %}\n\n{{ prompt }}"
+      else %}\n  - Usual Workday.\n{%- endif %}\n\n{{ prompt }}"
     agent_id: !input conversation_agent
   response_variable: agent
 - alias: Send notification
   service: !input notify_service
   data:
-    title: '{{ now().strftime(''%A'') }} Agenda'
+    title: '{{ now().strftime(''%A'') }} Morning Brief'
     message: '{{ agent.response.speech.plain.speech }}'
