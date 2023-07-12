@@ -62,9 +62,7 @@ blueprint:
     conversation_agent:
       name: Conversation agent
       description: 'The conversation agent to use for generating the notification
-        text.
-
-        This should be a OpenAI conversation agent for this Blueprint to work.'
+        text. This should be a OpenAI conversation agent for this Blueprint to work.'
       selector:
         conversation_agent: {}
     prompt:
@@ -73,10 +71,7 @@ blueprint:
         text:
           multiline: true
           type: text
-      default: "Generate a user-friendly notification with important information for the day. 
-        Keep in mind : Be helpful, friendly, warm, and insightful. Avoid technical terms and 
-        Home Assistant internals. Provide key details for the day such as unusual weather time 
-        until first meeting, and special events like birthdays."
+      default: "Generate a user-friendly short morning notification brief in about 100 words only with crucial daily information.  Provide critical details for the day such as unusual weather only, time until the first meeting or tasks, and special events like birthdays for example."
 source_url: https://github.com/DrShivang/ShivSneh-HA/blob/b4665a821ea0c4d72aebaab4038efb884e549fdc/blueprints/AI-HA-Morning-Brief.yaml
 trigger:
   platform: time
