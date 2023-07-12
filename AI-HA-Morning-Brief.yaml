@@ -1,0 +1,143 @@
+blueprint:
+  name: AI Morning Brief ShivSneh
+  description: Conversation agent generates a notification based on the upcoming calendar
+    agenda, location, and weather.
+  author: shivang
+  domain: automation
+  input:
+    notify_time:
+      name: Notification time
+      description: Time the automation is triggered to send the notification.
+      selector:
+        time: {}
+      default: 07:00:00
+    notify_service:
+      name: Notify service name
+      description: The name of the notify service where the notification should be
+        sent.
+      selector:
+        text:
+          multiline: false
+          type: text
+      default: notify.all_devices
+    calendar_entity1:
+      name: Calendar 1
+      description: The calendar entity to use for finding upcoming calendar events.
+      selector:
+        entity:
+          domain: calendar
+    calendar_entity2:
+      name: Calendar 2
+      description: The calendar entity to use for finding upcoming calendar events.
+      selector:
+        entity:
+          domain: calendar
+    calendar_entity3:
+      name: Calendar 3
+      description: The calendar entity to use for finding upcoming calendar events.
+      selector:
+        entity:
+          domain: calendar
+    calendar_duration:
+      name: Calendar event duration
+      description: How many hours ahead to look for upcoming calendar events.
+      selector:
+        duration: {}
+      default:
+        hours: 24
+    weather_entity:
+      name: Weather entity
+      description: The weather entity to use for upcoming weather forecast.
+      selector:
+        entity:
+          domain: weather
+    zone_entity:
+      name: Home zone entity
+      description: The zone entity to use to determine approximate location for understanding
+        typical weather.
+      selector:
+        entity:
+          domain: zone
+    conversation_agent:
+      name: Conversation agent
+      description: 'The conversation agent to use for generating the notification
+        text.
+
+        This should be a OpenAI conversation agent for this Blueprint to work.'
+      selector:
+        conversation_agent: {}
+    prompt:
+      name: Conversation agent prompt
+      selector:
+        text:
+          multiline: true
+          type: text
+      default: "Generate a user-friendly notification with important information for the day.
+         Keep in mind : Be helpful, friendly, warm, and insightful. Avoid technical terms 
+         and Home Assistant internals. Provide key details for the day such as unusual weather, 
+         time until first meeting, and special events like birthdays."
+  source_url: https://www.home-assistant.io/blueprints/blog/2023-07/notify_agent_agenda.yaml
+trigger:
+  platform: time
+  at: !input notify_time
+action:
+- variables:
+    weather_entity: !input weather_entity
+    calendar_entity1: !input calendar_entity1
+    calendar_entity2: !input calendar_entity2
+    calendar_entity3: !input calendar_entity3
+    zone_entity: !input zone_entity
+    calendar_duration: !input calendar_duration
+    prompt: !input prompt
+- alias: Fetch Calendar Agenda 1
+  service: calendar.list_events
+  data:
+    duration: !input calendar_duration
+  target:
+    entity_id: !input calendar_entity1
+  response_variable: agenda1
+- alias: Fetch Calendar Agenda 2
+  service: calendar.list_events
+  data:
+    duration: !input calendar_duration
+  target:
+    entity_id: !input calendar_entity2
+  response_variable: agenda2
+- alias: Fetch Calendar Agenda 3
+  service: calendar.list_events
+  data:
+    duration: !input calendar_duration
+  target:
+    entity_id: !input calendar_entity3
+  response_variable: agenda3
+- variables:
+    agenda:
+      events: >
+        {% if agenda1.events is defined %}
+          {{ agenda1.events + (agenda2.events if agenda2.events is defined else []) + (agenda3.events if agenda3.events is defined else []) }}
+        {% else %}
+          []
+        {% endif %}
+- alias: Conversation Agent Notification Text
+  service: conversation.process
+  data:
+    text: "Time: {{ now() }}\n{%- if zone_entity is defined %}\nLatitude: {{ state_attr(zone_entity,
+      'latitude') | round(1) }}\nLongitude: {{ state_attr(zone_entity, 'longitude')
+      | round(1) }}\n{% endif %}\n\n{%- if weather_entity is defined %}\n{%- set forecast
+      = state_attr(weather_entity, 'forecast')[0] %}\n{%- set temperature_unit = state_attr(weather_entity,
+      'temperature_unit') -%}\nWeather: {{ forecast.condition }} ({{ forecast.temperature
+      }}{{ temperature_unit }}, {{ forecast.precipitation }}% precipitation)\n{%-
+      endif %}\n\nCalendar events for the next {{ calendar_duration.hours }}:\n{%- if agenda.events %}\n
+      \ {%- for event in agenda.events %}\n  - Summary: {{ event.summary }}\n    Start-End:
+      {% if event.start is defined %}{{ event.start }} to {{ event.end }}{% else %}All
+      Day{% endif %}\n    {%- if event.descripton is defined %}\n    Descripton: {{
+      event.descripton }}\n    {% endif -%}\n    {%- if event.location is defined
+      %}\n      Location: {{ event.location }}\n    {% endif -%}\n  {%- endfor %}\n{%-
+      else %}\n  - No upcoming events.\n{%- endif %}\n\n{{ prompt }}"
+    agent_id: !input conversation_agent
+  response_variable: agent
+- alias: Send notification
+  service: !input notify_service
+  data:
+    title: '{{ now().strftime(''%A'') }} Agenda'
+    message: '{{ agent.response.speech.plain.speech }}'
