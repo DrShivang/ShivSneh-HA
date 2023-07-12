@@ -1,6 +1,8 @@
 blueprint:
   name: AI Morning Brief ShivSneh
-  description: This Conversation agent generates a notification based on the upcoming calendar based on agenda, location, and weather. Blueprint based on notify_agent_agenda blueprint from home assistant : https://www.home-assistant.io/blueprints/blog/2023-07/notify_agent_agenda.yaml
+  description: This Conversation agent generates a notification based on the upcoming calendar
+    based on agenda, location, and weather. Blueprint based on notify_agent_agenda blueprint from
+    home assistant by @allenporter at https://www.home-assistant.io/blueprints/blog/2023-07/notify_agent_agenda.yaml
   author: Shivang
   domain: automation
   input:
@@ -71,10 +73,10 @@ blueprint:
         text:
           multiline: true
           type: text
-      default: "Generate a user-friendly notification with important information for the day.
-         Keep in mind : Be helpful, friendly, warm, and insightful. Avoid technical terms 
-         and Home Assistant internals. Provide key details for the day such as unusual weather, 
-         time until first meeting, and special events like birthdays."
+      default: "Generate a user-friendly notification with important information for the day. 
+        Keep in mind : Be helpful, friendly, warm, and insightful. Avoid technical terms and 
+        Home Assistant internals. Provide key details for the day such as unusual weather time 
+        until first meeting, and special events like birthdays."
   source_url: https://www.home-assistant.io/blueprints/blog/2023-07/notify_agent_agenda.yaml
 trigger:
   platform: time
