@@ -86,21 +86,21 @@ action:
     calendar_duration: !input calendar_duration
     prompt: !input prompt
 - alias: Fetch Calendar Agenda 1
-  service: calendar.list_events
+  service: calendar.get_events
   data:
     duration: !input calendar_duration
   target:
     entity_id: !input calendar_entity1
   response_variable: agenda1
 - alias: Fetch Calendar Agenda 2
-  service: calendar.list_events
+  service: calendar.get_events
   data:
     duration: !input calendar_duration
   target:
     entity_id: !input calendar_entity2
   response_variable: agenda2
 - alias: Fetch Calendar Agenda 3
-  service: calendar.list_events
+  service: calendar.get_events
   data:
     duration: !input calendar_duration
   target:
