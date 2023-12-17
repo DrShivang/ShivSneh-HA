@@ -2,7 +2,7 @@ blueprint:
   name: AI Morning Brief ShivSneh
   description: This Conversation agent generates a notification based on the upcoming calendar
     based on agenda, location, and weather. Blueprint based on notify_agent_agenda blueprint from
-    home assistant by @allenporter at https://www.home-assistant.io/blueprints/blog/2023-07/notify_agent_agenda.yaml
+    home assistant by @allenporter at https://www.home-assistant.io/blueprints/blog/2023-07/notify_agent_agenda.yaml. Blueprint Version 01122023
   author: Shivang
   domain: automation
   input:
