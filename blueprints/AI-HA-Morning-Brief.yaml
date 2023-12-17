@@ -72,7 +72,7 @@ blueprint:
           multiline: true
           type: text
       default: "Generate a user-friendly short morning brief in about 240 Characters only with crucial daily information.  Provide critical details for the day such as unusual extreme weather conditions only or rain, time until the first meeting or tasks, and special events like birthdays for example. Focus on Important things and Maintain the word limit and keep it short for mobile notifications. Avoid unsolicited advices for controlling devices etc."
-  source_url: https://github.com/DrShivang/ShivSneh-HA/blob/b4665a821ea0c4d72aebaab4038efb884e549fdc/blueprints/AI-HA-Morning-Brief.yaml
+  source_url: https://github.com/DrShivang/ShivSneh-HA/blob/main/blueprints/AI-HA-Morning-Brief.yaml
 trigger:
   platform: time
   at: !input notify_time
