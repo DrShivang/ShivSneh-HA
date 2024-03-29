@@ -706,6 +706,14 @@ font:
     glyphs: ${allowed_characters}
     id: font_response
     size: 15
+  - file:
+      type: gfonts
+      family: Roboto
+      weight: 300
+    id: font_roboto_16
+    size: 16
+    glyphs: ${allowed_characters}
+    
 color:
   - id: idle_color
     hex: ${idle_illustration_background_color}
