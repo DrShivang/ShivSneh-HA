@@ -1,0 +1,10 @@
+git clone https://github.com/esphome/firmware.git
+cd firmware
+git checkout -b merge-variant
+
+
+git remote add variant https://github.com/jaymunro/esphome_firmware.git
+git fetch variant
+
+
+https://github.com/jaymunro/esphome_firmware/blob/continued-conversation/wake-word-voice-assistant/esp32-s3-box-3.yaml
