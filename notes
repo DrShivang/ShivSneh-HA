@@ -8,3 +8,42 @@ git fetch variant
 
 
 https://github.com/jaymunro/esphome_firmware/blob/continued-conversation/wake-word-voice-assistant/esp32-s3-box-3.yaml
+
+
+https://github.com/esphome/issues/issues/5296
+i2c:
+  - id: bus_a
+    sda: GPIO08
+    scl: GPIO18
+    scan: false
+
+  - sda: GPIO41
+    scl: GPIO40
+    id: bus_b
+
+sensor:
+  - platform: aht10
+    i2c_id: bus_b
+    variant: AHT20
+    temperature:
+      name: "Temperature"
+    humidity:
+      name: "Humidity"
+    update_interval: 60s
+
+    i2c:
+  - id: bus_a
+    sda: GPIO08
+    scl: GPIO18
+    scan: false
+    sda_pullup_enabled: true
+    scl_pullup_enabled: true
+    frequency: 100kHz
+
+  - sda: GPIO41
+    scl: GPIO40
+    scan: false
+    sda_pullup_enabled: true
+    scl_pullup_enabled: true
+    frequency: 100kHz
+    id: bus_b
