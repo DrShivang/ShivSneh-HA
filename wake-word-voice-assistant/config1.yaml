@@ -1,0 +1,53 @@
+substitutions:
+  name: esp32-s3-box-3
+  friendly_name: ESP32 S3 Box 3
+#  micro_wake_word_model: hey_jarvis
+
+packages:
+  esphome.voice-assistant: github://esphome/firmware/wake-word-voice-assistant/esp32-s3-box-3.yaml@main
+  esphome.voice-assistant: github://jaymunro/esphome_firmware/wake-word-voice-assistant/esp32-s3-box-3.yaml@continued-conversation
+#  esphome.voice-assistant-sensor: github://jaymunro/esphome_firmware/voice-assistant/esp32-s3-box-3-sensor.yaml@sensor_dock
+#  esphome.voice-assistant: github://DrShivang/ShivSneh-HA/wake-word-voice-assistant/esp32-s3-box-3-v2.yaml@merge-variant
+#  remote_package:
+#    url: https://github.com/DrShivang/ShivSneh-HA
+#    ref: merge-variant
+#    files: wake-word-voice-assistant/esp32-s3-box-3-v2.yaml
+#    refresh: 0d
+# https://github.com/esphome/firmware/issues/133
+  
+esphome:
+  name: ${name}
+  name_add_mac_suffix: false
+  friendly_name: ${friendly_name}
+api:
+  encryption:
+    key: vrWqXsCFvwoDtzbvwOCe02t9vhLXlwPT3dXFq2SL8Fs=
+
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+i2c:
+  - id: bus_a
+    sda: GPIO08
+    scl: GPIO18
+    scan: true
+
+  - sda: GPIO41
+    scl: GPIO40
+    id: bus_b
+
+sensor:
+  - platform: aht10
+    i2c_id: bus_b
+    variant: AHT20
+    temperature:
+      name: "Temperature"
+    humidity:
+      name: "Humidity"
+    update_interval: 10s
+
+  - platform: internal_temperature
+    name: "Internal Temperature"
+    entity_category: "diagnostic" 
