@@ -1,6 +1,6 @@
 substitutions:
-  name: esp32-s3-box-3
-  friendly_name: ESP32 S3 Box 3 Voice Assist
+  name: esp32-s3-box-3-5a8840
+  friendly_name: S3 Box 3 Voice Assist
   loading_illustration_file: https://github.com/esphome/firmware/raw/main/voice-assistant/casita/loading_320_240.png
   idle_illustration_file: https://github.com/esphome/firmware/raw/main/voice-assistant/casita/idle_320_240.png
   listening_illustration_file: https://github.com/esphome/firmware/raw/main/voice-assistant/casita/listening_320_240.png
@@ -25,16 +25,10 @@ substitutions:
 
   wifi_ssid: !secret wifi_ssid # add in your esphome secrets file.
   wifi_password: !secret wifi_password # add in your esphome secrets file. -> per default this is also used for ota_password and web_password
-  #ota_password: !secret ota_password # add in your esphome secrets file. - manual change in code required to activate
-  #web_password: !secret wifi_password # add in your esphome secrets file. - manual change in code required to activate
-  web_password: admin
-  api_password: !secret api_key # add in your esphome secrets file. - manual change in code required to activate  
+  ota_password: !secret wifi_password # add in your esphome secrets file. - manual change in code required to activate
+  web_password: !secret wifi_password # add in your esphome secrets file. - manual change in code required to activate
+  api_password: "VvZQ0vJHjFoeyFbHjbmLEJDAB7E9bkDJSGsNNm4Totg=" # add in your esphome secrets file. - manual change in code required to activate  
  
-  # ## static ip config ##
-  ip: "192.168.0.180"
-  gw: "192.168.0.1"
-  subnet: "255.255.255.0"
-  dns: "192.168.0.1"
 
 external_components:
   - source: github://pr#5894 #5198
@@ -43,7 +37,6 @@ external_components:
   - source: github://X-Ryl669/esphome@esp-adf-take2 #pr#5230
     components: [esp_adf]
     refresh: 0s
-#  - source: github://X-Ryl669/esphome-ms58
   - source: github://X-Ryl669/esphome@at581x
     components: at581x
     refresh: 0s
@@ -70,7 +63,7 @@ esphome:
             poweron_selfcheck_time: 2s
             protect_time: 1s 
             trigger_base: 500ms
-            trigger_keep: 10s 
+            trigger_keep: 30s 
             stage_gain: 3 # 0-12 the higher the value the smaller the gain
             power_consumption: 70uA
     - priority: 600
@@ -99,7 +92,6 @@ esp32:
     components:
       - name: esp32_s3_box_3_board
         source: github://X-Ryl669/esp32-s3-box-3-board@main
-#        source: github://jesserockz/esp32-s3-box-3-board@main
         refresh: 0s
 
 psram:
@@ -111,8 +103,8 @@ api:
     - script.execute: draw_display
   on_client_disconnected:
     - script.execute: draw_display
-#  encryption:
-#    key: ${api_password}
+  encryption:
+    key: ${api_password}
 
 
 ota:
@@ -134,10 +126,9 @@ wifi:
   ssid: ${wifi_ssid}
   password: ${wifi_password}
   manual_ip:
-    static_ip: ${ip}
-    gateway: ${gw}
-    subnet: ${subnet}
-    dns1: ${dns}
+    static_ip: 192.168.0.180
+    gateway: 192.168.0.1
+    subnet: 255.255.255.0
 
 improv_serial:
 
@@ -152,7 +143,6 @@ button:
 at581x:
   id: "Waveradar"
   i2c_id: bus_a
-  detection_pin: 21
 
 binary_sensor:
   - platform: gpio
@@ -177,9 +167,15 @@ binary_sensor:
         then:
           - button.press: factory_reset_btn
   
-  - platform: at581x
-    at581x_id: "Waveradar"
+  - platform: gpio
+    pin: GPIO21
     name: "Radar motion"
+    on_press:
+      then:
+        - light.turn_on: led
+    on_release:
+      then:
+        - light.turn_off: led
 
 output:
   - platform: ledc
@@ -194,6 +190,20 @@ light:
     output: backlight_output
     restore_mode: RESTORE_DEFAULT_ON
     default_transition_length: 250ms
+
+touchscreen:
+  platform: gt911
+  i2c_id: bus_0
+  id: gt911_touchscreen
+  interrupt_pin: GPIO3
+  on_touch:
+    - then:
+      - logger.log:
+          format: Touch at (%d, %d)
+          args: [touch.x, touch.y]
+      - light.turn_on: led
+      - delay: 5s
+      - light.turn_off: led
 
 esp_adf:
   board: esp32s3box3
@@ -218,6 +228,11 @@ voice_assistant:
   on_listening:
     - lambda: id(voice_assistant_phase) = ${voice_assist_listening_phase_id};
     - script.execute: draw_display
+  on_stt_vad_start:
+    then:
+      - light.turn_on: led
+      - delay: 5s
+      - light.turn_off: led
   on_stt_vad_end:
     - lambda: id(voice_assistant_phase) = ${voice_assist_thinking_phase_id};
     - script.execute: draw_display
