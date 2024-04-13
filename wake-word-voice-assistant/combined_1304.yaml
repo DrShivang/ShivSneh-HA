@@ -1,4 +1,4 @@
-# Commit : bad3e73 dt 13042024
+# Sensor Variant Merged
 substitutions:
   name: esp32-s3-box-3
   friendly_name: S3 Box 3 Voice Assist
@@ -25,7 +25,13 @@ substitutions:
   voice_assist_error_phase_id: "11"
   voice_assist_muted_phase_id: "12"
 
-  # These unqiue characters have been extracted from every test file of every language available on https://github.com/home-assistant/intents (14 March 2024)
+  wifi_ssid: !secret wifi_ssid # add in your esphome secrets file.
+  wifi_password: !secret wifi_password # add in your esphome secrets file. -> per default this is also used for ota_password and web_password
+  ota_password: !secret wifi_password # add in your esphome secrets file. - manual change in code required to activate
+  web_password: !secret wifi_password # add in your esphome secrets file. - manual change in code required to activate
+  api_password: "VvZQ0vJHjFoeyFbHjbmLEJDAB7E9bkDJSGsNNm4Totg=" # add in your esphome secrets file - manual change in code required to activate  
+ 
+ # These unqiue characters have been extracted from every test file of every language available on https://github.com/home-assistant/intents (14 March 2024)
   allowed_characters: " !#%\"'()+,-./0123456789:;<>?@ABCDEFGHIJKLMNOPQRSTUVWYZ[]_abcdefghijklmnopqrstuvwxyz{|}°²³µ¿ÁÂÄÅÉÖÚßàáâãäåæçèéêëìíîðñòóôõöøùúûüýþāăąćčďĐđēėęěğĮįıļľŁłńňőřśšťũūůűųźŻżŽžơưșțΆΈΌΐΑΒΓΔΕΖΗΘΚΜΝΠΡΣΤΥΦάέήίαβγδεζηθικλμνξοπρςστυφχψωϊόύώАБВГДЕЖЗИКЛМНОПРСТУХЦЧШЪЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяёђєіїјљњћאבגדהוזחטיכלםמןנסעפץצקרשת،ءآأإئابةتجحخدذرزسشصضطظعغفقكلمنهوىيٹپچڈکگںھہیےংকচতধনফবযরলশষস়ািু্చయలిెొ్ംഅആഇഈഉഎഓകഗങചജഞടഡണതദധനപഫബഭമയരറലളവശസഹാിീുൂെേൈ്ൺൻർൽൾაბგდევზთილმნოპრსტუფქყშჩცძჭხạảấầẩậắặẹẽếềểệỉịọỏốồổỗộớờởợụủứừửữựỳ—、一上不个中为主乾了些亮人任低佔何作供依侧係個側偵充光入全关冇冷几切到制前動區卧厅厨及口另右吊后吗启吸呀咗哪唔問啟嗎嘅嘛器圍在场執場外多大始安定客室家密寵对將小少左已帘常幫幾库度庫廊廚廳开式後恆感態成我戲戶户房所扇手打执把拔换掉控插摄整斯新明是景暗更最會有未本模機檯櫃欄次正氏水沒没洗活派温測源溫漏潮激濕灯為無煙照熱燈燥物狀玄现現瓦用發的盞目着睡私空窗立笛管節簾籬紅線红罐置聚聲脚腦腳臥色节著行衣解設調請謝警设调走路車车运連遊運過道邊部都量鎖锁門閂閉開關门闭除隱離電震霧面音頂題顏颜風风食餅餵가간감갔강개거게겨결경고공과관그금급기길깥꺼껐꼽나난내네놀누는능니다닫담대더데도동됐되된됨둡드든등디때떤뜨라래러렇렌려로료른를리림링마많명몇모무문물뭐바밝방배변보부불블빨뽑사산상색서설성세센션소쇼수스습시신실싱아안않알았애야어얼업없었에여연열옆오온완외왼요운움워원위으은을음의이인일임입있작잠장재전절정제져조족종주줄중줘지직진짐쪽차창천최추출충치침커컴켜켰쿠크키탁탄태탬터텔통트튼티파팬퍼폰표퓨플핑한함해했행혀현화활후휴힘，？"
 
   micro_wake_word_model: hey_jarvis
@@ -35,10 +41,21 @@ substitutions:
   listening_prompt: "How can I help?"
   error_prompt: "Sorry, error."
 
+external_components:
+  - source: github://pr#5894 #5198
+    components: [ahtxx]
+    refresh: 60s
+  - source: github://X-Ryl669/esphome@esp-adf-take2 #pr#5230
+    components: [esp_adf]
+    refresh: 0s
+  - source: github://X-Ryl669/esphome@at581x
+    components: at581x
+    refresh: 0s
+
 esphome:
   name: ${name}
+  name_add_mac_suffix: false
   friendly_name: ${friendly_name}
-  name_add_mac_suffix: true
   platformio_options:
     board_build.flash_mode: dio
   project:
@@ -46,16 +63,31 @@ esphome:
     version: "2.0"
   min_version: 2023.11.5
   on_boot:
-    priority: 600
-    then:
-      - script.execute: draw_display
-      - delay: 30s
-      - if:
-          condition:
-            lambda: return id(init_in_progress);
-          then:
-            - lambda: id(init_in_progress) = false;
-      - script.execute: draw_display  # Draw the display again in case the on_client_connected cannot do so
+    - priority: 200
+      then:
+        - at581x.settings:
+            id: "Waveradar"
+            hw_frontend_reset: false
+            frequency: 5800Mhz  
+            sensing_distance: 400 # 0-1023
+            poweron_selfcheck_time: 2s
+            protect_time: 1s 
+            trigger_base: 500ms
+            trigger_keep: 30s 
+            stage_gain: 1 # 0-12 the higher the value the smaller the gain, Lower value increases sensitivity
+            power_consumption: 70uA
+            # https://github.com/X-Ryl669/esphome-docs/blob/2119b8223c5e63a2e6c07a40ef137d8d535cc1a5/components/at581x.rst#configuration-variables-3
+    - priority: 600
+      then:
+        - script.execute: draw_display
+        - delay: 30s
+        - if:
+            condition:
+              lambda: return id(init_in_progress);
+            then:
+              - lambda: id(init_in_progress) = false;
+              - script.execute: draw_display
+
 
 esp32:
   board: esp32s3box
@@ -70,27 +102,25 @@ esp32:
       CONFIG_ESP32_S3_BOX_3_BOARD: "y"
     components:
       - name: esp32_s3_box_3_board
-        source: github://jesserockz/esp32-s3-box-3-board@main
+        source: github://X-Ryl669/esp32-s3-box-3-board@main
         refresh: 0s
 
 psram:
   mode: octal
   speed: 80MHz
 
-external_components:
-  - source: github://pr#5230
-    components: esp_adf
-    refresh: 0s
-
 api:
   on_client_connected:
     - script.execute: draw_display
   on_client_disconnected:
     - script.execute: draw_display
+  encryption:
+    key: ${api_password}
+
 
 ota:
-logger:
-  hardware_uart: USB_SERIAL_JTAG
+  password: ${ota_password}
+
 
 dashboard_import:
   package_import_url: github://esphome/firmware/wake-word-voice-assistant/esp32-s3-box-3.yaml@main
@@ -99,11 +129,17 @@ wifi:
   ap:
   on_connect:
     - script.execute: draw_display
-    - delay: 5s  # Gives time for improv results to be transmitted
+    - delay: 5s # Gives time for improv results to be transmitted
     - ble.disable:
   on_disconnect:
     - script.execute: draw_display
     - ble.enable:
+  ssid: ${wifi_ssid}
+  password: ${wifi_password}
+  manual_ip:
+    static_ip: 192.168.0.180
+    gateway: 192.168.0.1
+    subnet: 255.255.255.0
 
 improv_serial:
 
@@ -114,6 +150,13 @@ button:
   - platform: factory_reset
     id: factory_reset_btn
     name: Factory reset
+  - platform: restart
+    id: restart_btn
+    name: Restart
+
+at581x:
+  id: "Waveradar"
+  i2c_id: bus_a
 
 binary_sensor:
   - platform: gpio
@@ -138,6 +181,16 @@ binary_sensor:
           - ON for at least 10s
         then:
           - button.press: factory_reset_btn
+  
+  - platform: gpio
+    pin: GPIO21
+    name: "Occupancy"
+    on_press:
+      then:
+        - light.turn_on: led
+    on_release:
+      then:
+        - light.turn_off: led
 
 output:
   - platform: ledc
@@ -152,6 +205,20 @@ light:
     output: backlight_output
     restore_mode: RESTORE_DEFAULT_ON
     default_transition_length: 250ms
+
+touchscreen:
+  platform: gt911
+  i2c_id: bus_0
+  id: gt911_touchscreen
+  interrupt_pin: GPIO3
+  on_touch:
+    - then:
+      - logger.log:
+          format: Touch at (%d, %d)
+          args: [touch.x, touch.y]
+      - light.turn_on: led
+      - delay: 5s
+      - light.turn_off: led
 
 esp_adf:
   board: esp32s3box3
@@ -199,7 +266,10 @@ voice_assistant:
           - text_sensor.template.publish:
               id: text_response
               state: "..."
+    - light.turn_on: led
     - script.execute: draw_display
+    - delay: 5s
+    - light.turn_off: led
     - if:
         condition:
           - switch.is_on: continued_conversation
@@ -207,14 +277,24 @@ voice_assistant:
           - script.execute: stt_timeout_to_idle
           - lambda: id(va).set_use_wake_word(false);
 
-  on_stt_vad_end:
-    - lambda: id(voice_assistant_phase) = ${voice_assist_thinking_phase_id};
-    - script.execute: draw_display
-    
   on_stt_end:
     - text_sensor.template.publish:
         id: text_request
         state: !lambda return x;
+    - script.execute: draw_display
+    - if:
+        condition:
+          - switch.is_on: continued_conversation
+        then:
+          - script.execute: stt_timeout_to_idle
+  on_stt_vad_start:
+    then:
+      - light.turn_on: led
+  #    - delay: 5s
+  #    - light.turn_off: led
+
+  on_stt_vad_end:
+    - lambda: id(voice_assistant_phase) = ${voice_assist_thinking_phase_id};
     - script.execute: draw_display
     - if:
         condition:
@@ -236,6 +316,7 @@ voice_assistant:
           - script.execute: return_to_idle
   on_tts_stream_start:
     - lambda: id(voice_assistant_phase) = ${voice_assist_replying_phase_id};
+    - light.turn_on: led
     - script.execute: draw_display
     - if:
         condition:
@@ -252,6 +333,8 @@ voice_assistant:
         else:
           - lambda: id(voice_assistant_phase) = ${voice_assist_idle_phase_id};
     - script.execute: draw_display
+    - delay: 5s
+    - light.turn_off: led
   on_end:
     - if:
         condition:
@@ -269,6 +352,7 @@ voice_assistant:
             - lambda: return !(code == "stt-no-text-recognized");
         then:
           - lambda: id(voice_assistant_phase) = ${voice_assist_error_phase_id};
+          - light.turn_on: led
           - script.execute: draw_display
           - delay: 1s
           - script.stop: stt_timeout_to_idle
@@ -276,7 +360,7 @@ voice_assistant:
               condition:
                 switch.is_off: mute
               then:
-                # - logger.log: "(on_client_connected) Returning to idle by script"
+                - lambda: id(voice_assistant_phase) = ${voice_assist_idle_phase_id};
                 - script.execute: return_to_idle
               else:
                 - lambda: id(voice_assistant_phase) = ${voice_assist_muted_phase_id};
@@ -289,6 +373,8 @@ voice_assistant:
           - wait_until:
               not: ble.enabled
           - script.execute: return_to_idle
+         # - voice_assistant.start_continuous:
+         # - lambda: id(voice_assistant_phase) = ${voice_assist_idle_phase_id};
         else:
           - lambda: id(voice_assistant_phase) = ${voice_assist_muted_phase_id};
     - lambda: id(init_in_progress) = false;
@@ -306,6 +392,7 @@ voice_assistant:
         then:
           - micro_wake_word.stop
     - lambda: id(voice_assistant_phase) = ${voice_assist_not_ready_phase_id};
+    - light.turn_on: led
     - script.execute: draw_display
 
 script:
@@ -472,11 +559,21 @@ switch:
             lambda: return !id(init_in_progress);
           then:
             - script.execute: return_to_idle
+            #- lambda: id(va).set_use_wake_word(true);
+            #- lambda: id(voice_assistant_phase) = ${voice_assist_idle_phase_id};
+            #- if:
+            #    condition:
+            #      not:
+            #        - voice_assistant.is_running
+            #    then:
+            #      - voice_assistant.start_continuous
+            #- script.execute: draw_display
     on_turn_on:
       - if:
           condition:
             lambda: return !id(init_in_progress);
           then:
+            - voice_assistant.stop
             - lambda: id(va).set_use_wake_word(false);
             - if:
                 condition:
@@ -490,6 +587,10 @@ switch:
                   - micro_wake_word.stop
             - lambda: id(voice_assistant_phase) = ${voice_assist_muted_phase_id};
             - script.execute: draw_display
+  - platform: at581x
+    at581x_id: "Waveradar"
+    name: "Enable Radar"
+
   - platform: template
     name: Continued conversation
     id: continued_conversation
@@ -603,11 +704,11 @@ select:
 globals:
   - id: init_in_progress
     type: bool
-    restore_value: false
+    restore_value: no
     initial_value: "true"
   - id: voice_assistant_phase
     type: int
-    restore_value: false
+    restore_value: no
     initial_value: ${voice_assist_not_ready_phase_id}
   - id: date_format_string
     type: std::string
@@ -721,7 +822,7 @@ color:
     hex: ${error_illustration_background_color}
   - id: text_outline_color
     hex: ${text_outline_color}
-    
+
 spi:
   clk_pin: 7
   mosi_pin: 6
@@ -879,3 +980,44 @@ display:
       - id: muted_page
         lambda: |-
           it.fill(Color::BLACK);
+          
+i2c:
+  - id: bus_0
+    sda: GPIO8
+    scl: GPIO18
+    scan: false
+    frequency: 100kHz
+  - id: bus_a
+    sda: GPIO41
+    scl: GPIO40
+    sda_pullup_enabled: false
+    scl_pullup_enabled: false
+    scan: false
+    frequency: 100kHz
+    
+sensor:
+  - platform: ahtxx
+    type: aht30
+    i2c_id: bus_a
+    id: aht_20
+    address: 0x38
+    temperature:
+      name: "Temperature"
+    humidity:
+      name: "Humidity"
+    update_interval: 20s
+  
+
+logger:
+  # CDC logging is currently not working on the S3
+  # See https://github.com/espressif/esp-idf/commit/9924d9f27192a5fab5f66230c72249ecc6cad34c
+  #hardware_uart: USB_CDC
+  #level: VERY_VERBOSE
+  #level: INFO
+
+# Enable Home Assistant API
+web_server:
+  port: 80
+  auth:
+    username: admin
+    password: ${web_password}

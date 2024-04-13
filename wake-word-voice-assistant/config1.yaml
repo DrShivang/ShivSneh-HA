@@ -1,7 +1,7 @@
 substitutions:
   name: esp32-s3-box-3
   friendly_name: ESP32 S3 Box 3
-#  micro_wake_word_model: hey_jarvis
+  micro_wake_word_model: hey_jarvis
 
 packages:
   esphome.voice-assistant: github://esphome/firmware/wake-word-voice-assistant/esp32-s3-box-3.yaml@main
