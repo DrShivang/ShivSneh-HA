@@ -1,0 +1,289 @@
+blueprint:
+  name: Confirmable Notifications v2
+  description: >
+    Sends an actionable notification through a user-supplied action/service
+    such as script.notify_all_devices, waits for confirmation or dismissal,
+    and then runs the chosen action sequence.
+  domain: script
+  input:
+    notify_action:
+      name: Notification action
+      description: >
+        Action/service used to send the notification, for example
+        script.notify_all_devices
+      selector:
+        text:
+
+    title:
+      name: Title
+      selector:
+        text:
+      default: Notification
+
+    subtitle:
+      name: Subtitle
+      selector:
+        text:
+      default: ""
+
+    message:
+      name: Message
+      selector:
+        text:
+          multiline: true
+
+    icon:
+      name: Icon
+      selector:
+        text:
+      default: mdi:bell-ring-outline
+
+    enable_icon_color:
+      name: Enable icon color
+      selector:
+        boolean:
+      default: false
+
+    icon_color:
+      name: Icon color
+      description: RGB values
+      selector:
+        object:
+      default:
+        - 0
+        - 157
+        - 255
+
+    confirm_text:
+      name: Confirm button text
+      selector:
+        text:
+      default: "Yes"
+
+    confirm_icon:
+      name: Confirm button icon
+      selector:
+        text:
+      default: ""
+
+    confirm_action:
+      name: Confirm action
+      selector:
+        action:
+
+    dismiss_text:
+      name: Dismiss button text
+      selector:
+        text:
+      default: "No"
+
+    dismiss_icon:
+      name: Dismiss button icon
+      selector:
+        text:
+      default: ""
+
+    dismiss_action:
+      name: Dismiss action
+      selector:
+        action:
+      default: []
+
+    swipe_away_as_timeout:
+      name: Treat swipe-away as timeout
+      selector:
+        boolean:
+      default: true
+
+    clear_on_timeout:
+      name: Clear notification on timeout
+      selector:
+        boolean:
+      default: true
+
+    persist:
+      name: Persistent / sticky notification
+      selector:
+        boolean:
+      default: true
+
+    notification_link:
+      name: Notification link / URL
+      selector:
+        text:
+      default: ""
+
+    group:
+      name: Group
+      selector:
+        text:
+      default: ""
+
+    channel:
+      name: Channel
+      selector:
+        text:
+      default: ""
+
+    importance:
+      name: Importance
+      selector:
+        select:
+          options:
+            - default
+            - low
+            - min
+            - high
+            - max
+      default: high
+
+    interruption_level:
+      name: Interruption level
+      selector:
+        select:
+          options:
+            - passive
+            - active
+            - time-sensitive
+            - critical
+      default: time-sensitive
+
+    visibility:
+      name: Visibility
+      selector:
+        select:
+          options:
+            - private
+            - public
+            - secret
+      default: public
+
+    timeout:
+      name: Timeout
+      selector:
+        duration:
+      default:
+        hours: 0
+        minutes: 15
+        seconds: 0
+
+    tag:
+      name: Tag
+      description: Leave blank to auto-generate one
+      selector:
+        text:
+      default: ""
+
+variables:
+  notify_action_var: !input notify_action
+  title_var: !input title
+  subtitle_var: !input subtitle
+  message_var: !input message
+  icon_var: !input icon
+  enable_icon_color_var: !input enable_icon_color
+  icon_color_var: !input icon_color
+  confirm_text_var: !input confirm_text
+  confirm_icon_var: !input confirm_icon
+  dismiss_text_var: !input dismiss_text
+  dismiss_icon_var: !input dismiss_icon
+  swipe_away_as_timeout_var: !input swipe_away_as_timeout
+  clear_on_timeout_var: !input clear_on_timeout
+  persist_var: !input persist
+  notification_link_var: !input notification_link
+  group_var: !input group
+  channel_var: !input channel
+  importance_var: !input importance
+  interruption_level_var: !input interruption_level
+  visibility_var: !input visibility
+  tag_input_var: !input tag
+
+  tag_var: >-
+    {% if tag_input_var | trim != '' %}
+      {{ tag_input_var }}
+    {% else %}
+      confirmable_{{ context.id }}
+    {% endif %}
+
+  confirm_action_id: >-
+    CONFIRM_{{ context.id }}
+  dismiss_action_id: >-
+    DISMISS_{{ context.id }}
+
+sequence:
+  - action: "{{ notify_action_var }}"
+    data:
+      title: "{{ title_var }}"
+      message: "{{ message_var }}"
+      data:
+        tag: "{{ tag_var }}"
+        group: "{{ group_var }}"
+        channel: "{{ channel_var }}"
+        importance: "{{ importance_var }}"
+        visibility: "{{ visibility_var }}"
+        persistent: "{{ persist_var }}"
+        sticky: "{{ persist_var }}"
+        interruption-level: "{{ interruption_level_var }}"
+        subtitle: "{{ subtitle_var }}"
+        url: "{{ notification_link_var }}"
+        clickAction: "{{ notification_link_var }}"
+        notification_icon: "{{ icon_var }}"
+        color: >-
+          {% if enable_icon_color_var %}
+            {{ icon_color_var }}
+          {% else %}
+            {{ none }}
+          {% endif %}
+        actions:
+          - action: "{{ confirm_action_id }}"
+            title: "{{ confirm_text_var }}"
+            icon: "{{ confirm_icon_var }}"
+          - action: "{{ dismiss_action_id }}"
+            title: "{{ dismiss_text_var }}"
+            icon: "{{ dismiss_icon_var }}"
+
+  - wait_for_trigger:
+      - trigger: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: "{{ confirm_action_id }}"
+      - trigger: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: "{{ dismiss_action_id }}"
+      - trigger: event
+        event_type: mobile_app_notification_cleared
+        event_data:
+          tag: "{{ tag_var }}"
+    timeout: !input timeout
+    continue_on_timeout: true
+
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ wait.trigger is not none and wait.trigger.event.event_type == 'mobile_app_notification_action' and wait.trigger.event.data.action == confirm_action_id }}"
+        sequence: !input confirm_action
+
+      - conditions:
+          - condition: template
+            value_template: "{{ wait.trigger is not none and wait.trigger.event.event_type == 'mobile_app_notification_action' and wait.trigger.event.data.action == dismiss_action_id }}"
+        sequence: !input dismiss_action
+
+      - conditions:
+          - condition: template
+            value_template: "{{ wait.trigger is not none and wait.trigger.event.event_type == 'mobile_app_notification_cleared' and swipe_away_as_timeout_var }}"
+        sequence: []
+
+      - conditions:
+          - condition: template
+            value_template: "{{ wait.trigger is none }}"
+        sequence: []
+
+  - if:
+      - condition: template
+        value_template: "{{ clear_on_timeout_var }}"
+    then:
+      - action: "{{ notify_action_var }}"
+        data:
+          message: clear_notification
+          data:
+            tag: "{{ tag_var }}"
