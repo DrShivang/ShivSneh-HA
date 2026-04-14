@@ -201,13 +201,13 @@ variables:
     {% if tag_input_var | trim != '' %}
       {{ tag_input_var }}
     {% else %}
-      confirmable_{{ context.id }}
+      confirmable_{{ this.context.id }}
     {% endif %}
 
   confirm_action_id: >-
-    CONFIRM_{{ context.id }}
+    CONFIRM_{{ this.context.id }}
   dismiss_action_id: >-
-    DISMISS_{{ context.id }}
+    DISMISS_{{ this.context.id }}
 
 sequence:
   - action: "{{ notify_action_var }}"
